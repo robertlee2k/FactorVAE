@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
     # Argument parser 설정
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_path", type=str, default="/qlib_data/cn_data")
+    parser.add_argument("--data_path", type=str, default="/home/bo.li/.qlib/qlib_data/cn_data")
     parser.add_argument("--freq", type=str, default="day")
     parser.add_argument('--start_time', type=str, default='2008-01-01')
     parser.add_argument('--end_time', type=str, default='2020-12-31')
