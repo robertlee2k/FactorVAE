@@ -95,16 +95,16 @@ if __name__ == '__main__':
     parser.add_argument('--num_latent', type=int, default=158, help='number of variables')
     parser.add_argument('--num_portfolio', type=int, default=128, help='number of stocks')
 
-    parser.add_argument('--seq_len', type=int, default=20, help='sequence length')
+    parser.add_argument('--seq_len', type=int, default=60, help='sequence length')
     parser.add_argument('--num_factor', type=int, default=96, help='number of factors')
     parser.add_argument('--hidden_size', type=int, default=64, help='hidden size')
 
     parser.add_argument('--dataset', type=str, default='./data/csi_data.pkl', help='dataset to use')
     parser.add_argument('--start_time', type=str, default='2009-01-01', help='start time')
-    parser.add_argument('--fit_end_time', type=str, default='2017-12-31', help='fit end time')
-    parser.add_argument('--val_start_time', type=str, default='2018-01-01', help='validation start time')
-    parser.add_argument('--val_end_time', type=str, default='2018-12-31', help='validation end time')
-    parser.add_argument('--end_time', type=str, default='2020-12-31', help='end time')
+    parser.add_argument('--fit_end_time', type=str, default='2022-12-31', help='fit end time')
+    parser.add_argument('--val_start_time', type=str, default='2023-01-01', help='validation start time')
+    parser.add_argument('--val_end_time', type=str, default='2023-12-31', help='validation end time')
+    parser.add_argument('--end_time', type=str, default='2024-12-31', help='end time')
 
     parser.add_argument('--seed', type=int, default=42, help='random seed')
     parser.add_argument('--run_name', type=str, default='VAE-Revision2', help='name of the run')

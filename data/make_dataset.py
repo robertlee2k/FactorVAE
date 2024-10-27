@@ -19,12 +19,13 @@ if __name__ == "__main__":
     parser.add_argument("--data_path", type=str, default="/home/bo.li/.qlib/qlib_data/cn_data")
     parser.add_argument("--freq", type=str, default="day")
     parser.add_argument('--start_time', type=str, default='2008-01-01')
-    parser.add_argument('--end_time', type=str, default='2020-12-31')
-    parser.add_argument('--fit_end_time', type=str, default='2017-12-31')
-    parser.add_argument('--val_start_time', type=str, default='2018-01-01')
-    parser.add_argument('--val_end_time', type=str, default='2018-12-31')
-    parser.add_argument('--test_start_time', type=str, default='2019-01-01')
-    parser.add_argument('--seq_len', type=int, default=21)
+    parser.add_argument('--end_time', type=str, default='2024-12-31')
+    parser.add_argument('--fit_start_time', type=str, default='2009-01-01')
+    parser.add_argument('--fit_end_time', type=str, default='2022-12-31')
+    parser.add_argument('--val_start_time', type=str, default='2023-01-01')
+    parser.add_argument('--val_end_time', type=str, default='2023-12-31')
+    parser.add_argument('--test_start_time', type=str, default='2024-01-01')
+    parser.add_argument('--seq_len', type=int, default=61)
     args = parser.parse_args()
 
     # Qlib을 이용한 데이터 생성
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     data_handler_config = {
         "start_time": args.start_time,
         "end_time": args.end_time,
-        "fit_start_time": "2009-01-01", 
+        "fit_start_time": args.fit_start_time,
         "fit_end_time": args.fit_end_time,
         "instruments": market,
         "infer_processors": [
@@ -82,6 +83,9 @@ if __name__ == "__main__":
         dataframe_IM = dataframe_I
         dataframe_LM.to_pickle('sp500_data.pkl')
 
+
+    print("数据准备完成，抽样测试")
+
     ## TEST ##
     segments = {
         'train': (args.start_time, args.fit_end_time),
@@ -95,8 +99,10 @@ if __name__ == "__main__":
             'valid': ("2019-07-01", "2019-12-31",),
             'test': ("2020-01-01", "2022-12-31",),
         }
-    QlibTSDatasetH = TSDatasetH(handler=handler, segments=dic, step_len=20)
+    QlibTSDatasetH = TSDatasetH(handler=handler, segments=dic, step_len=args.seq_len)
     temp = QlibTSDatasetH.prepare(segments="train", data_key=DataHandlerLP.DK_L)
 
     print("------------------ Test QlibTSDatasetH ------------------")
     print(next(iter(temp)))
+
+    print("程序正常结束")
