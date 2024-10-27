@@ -30,7 +30,7 @@ def np_ffill(arr):
     - arr: np.array
 
     Returns:
-    - np.array, forward fill이 적용된 배열
+    - np.array, forward fill填充应用的数组
     """
     mask = np.isnan(arr)
     idx = np.where(~mask, np.arange(mask.shape[0]), 0)
