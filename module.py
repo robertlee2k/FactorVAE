@@ -269,15 +269,30 @@ class FactorVAE(nn.Module):
         # print("loss: ", vae_loss)
         return vae_loss, reconstruction, factor_mu, factor_sigma, pred_mu, pred_sigma #! reconstruction, factor_mu, factor_sigma
 
-    # 학습 이후 사용
+    # 在模型训练完成后使用此函数进行预测
     def prediction(self, x):
+        """
+        基于输入的数据 x 进行预测。
+
+        参数:
+        x: 输入的数据，通常是一段时间内的股票数据。
+
+        返回:
+        y_pred: 预测的股票价格或其他目标变量。
+        """
+        # 使用特征提取器对输入数据进行处理，提取股票的潜在特征
         stock_latent = self.feature_extractor(x)
+
+        # 使用因子预测器对提取的股票潜在特征进行预测，得到预测的均值和标准差
         pred_mu, pred_sigma = self.factor_predictor(stock_latent)
+
+        # 使用因子解码器结合股票潜在特征、预测的均值和标准差进行解码，得到最终的预测结果
         y_pred = self.factor_decoder(stock_latent, pred_mu, pred_sigma)
 
+        # 返回最终的预测结果
         return y_pred
 
-#%%    
+#%%
 # num_latent = 20
 # batch_size = 300 # equal to num of stocks
 # seq_len = 30

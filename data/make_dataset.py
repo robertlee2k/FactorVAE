@@ -14,9 +14,9 @@ import argparse
 
 if __name__ == "__main__":
 
-    # Argument parser 설정
+    # Argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_path", type=str, default="/home/bo.li/.qlib/qlib_data/cn_data")
+    parser.add_argument("--data_path", type=str, default='C:/20-python/InvariantStock/data/qlib_data/cn_data') #"/home/bo.li/.qlib/qlib_data/cn_data")
     parser.add_argument("--freq", type=str, default="day")
     parser.add_argument('--start_time', type=str, default='2008-01-01')
     parser.add_argument('--end_time', type=str, default='2024-12-31')
@@ -28,61 +28,91 @@ if __name__ == "__main__":
     parser.add_argument('--seq_len', type=int, default=61)
     args = parser.parse_args()
 
-    # Qlib을 이용한 데이터 생성
+    # 根据数据路径初始化Qlib并设置基准和市场
+    # Qlib是一个用于量化研究的开源库
     if args.data_path.split('/')[-1] == "cn_data":
+        # 如果数据路径指向中国数据，则初始化Qlib为中国市场数据
+        # REG_CN是中国市场的区域代码
         qlib.init(provider_uri=args.data_path, region=REG_CN)
+        # SH000300是沪深300指数的代码
         benchmark = "SH000300"
-        market = "csi300"
+        # csi300代表沪深300指数成分股
+        market ="csi800"  # "csi300"
     elif args.data_path.split('/')[-1] == "us_data":
+        # 如果数据路径指向美国数据，则初始化Qlib为美国市场数据
+        # REG_US是美国市场的区域代码
         qlib.init(provider_uri=args.data_path, region=REG_US)
+        # ^gspc是标普500指数的代码
         benchmark = "^gspc"
+        # sp500代表标普500指数成分股
         market = "sp500"
 
     provider_uri = args.data_path
     print(f"provider_uri: {provider_uri}")
     print(f"freq: {args.freq}")
 
+    # 初始化数据处理配置字典
     data_handler_config = {
+        # 设置数据处理的开始时间
         "start_time": args.start_time,
+        # 设置数据处理的结束时间
         "end_time": args.end_time,
+        # 设置模型拟合的开始时间
         "fit_start_time": args.fit_start_time,
+        # 设置模型拟合的结束时间
         "fit_end_time": args.fit_end_time,
+        # 指定感兴趣的金融工具或市场
         "instruments": market,
+        # 配置推理数据处理流程
         "infer_processors": [
             # {"class" : "FilterCol", "kwargs" : {"fields_group" : "feature"},},
-            {"class" : "RobustZScoreNorm","kwargs" : {"fields_group" : "feature", "clip_outlier" : True}},
-            {"class" : "Fillna", "kwargs" : {"fields_group" : "feature"}}],
+            # 使用健壮的Z分数标准化处理特征字段，并剪裁异常值
+            {"class": "RobustZScoreNorm", "kwargs": {"fields_group": "feature", "clip_outlier": True}},
+            # 使用填充缺失值处理器处理特征字段中的缺失值
+            {"class": "Fillna", "kwargs": {"fields_group": "feature"}}],
+        # 配置学习数据处理流程
         "learn_processors": [
-            {"class" : "DropnaLabel",}, 
-            {"class" : "CSRankNorm", "kwargs" : {"fields_group" : "label"}}, # ! CSZScoreNorm 에서 CSRankNorm으로 변경
-            ],
+            # 使用删除标签中的缺失值处理器
+            {"class": "DropnaLabel", },
+            # 使用截面排名标准化处理标签字段
+            {"class": "CSRankNorm", "kwargs": {"fields_group": "label"}},  # ！从CSZScoreNorm更改为CSRankNorm
+        ],
+        # 定义标签字段的计算公式
         "label": ["Ref($close, -2)/Ref($close, -1) - 1"],
     }
 
+    # Define time segments for training, validation, and testing
     segments = {
         'train': (args.start_time, args.fit_end_time),
         'valid': (args.val_start_time, args.val_end_time),
         'test': (args.test_start_time, args.end_time)
     }
+
+    # Initialize the dataset object with configuration parameters
     dataset = Alpha158(**data_handler_config)
 
-    dataframe_L = dataset.fetch(col_set=["feature","label"], data_key=DataHandlerLP.DK_L) 
+    # Fetch the feature and label data for the local dataset (low frequency)
+    dataframe_L = dataset.fetch(col_set=["feature", "label"], data_key=DataHandlerLP.DK_L)
+    # Remove the top level column names for clearer dataframes
     dataframe_L.columns = dataframe_L.columns.droplevel(0)
 
-    dataframe_I = dataset.fetch(col_set=["feature","label"], data_key=DataHandlerLP.DK_I)
+    # Fetch the feature and label data for the instantaneous dataset (high frequency)
+    dataframe_I = dataset.fetch(col_set=["feature", "label"], data_key=DataHandlerLP.DK_I)
+    # Remove the top level column names for clearer dataframes
     dataframe_I.columns = dataframe_I.columns.droplevel(0)
 
+    # Check if the dataset is for the Chinese market
     if args.data_path.split('/')[-1] == "cn_data":
-        #? market info not included in the dataset
+        # Market information is not included in the dataset
         dataframe_LM = dataframe_L
         dataframe_IM = dataframe_I
+        # Save the processed Chinese market data
         dataframe_LM.to_pickle('csi_data.pkl')
-    
+
     elif args.data_path.split('/')[-1] == "us_data":
         dataframe_LM = dataframe_L
         dataframe_IM = dataframe_I
         dataframe_LM.to_pickle('sp500_data.pkl')
-
 
     print("数据准备完成，抽样测试")
 

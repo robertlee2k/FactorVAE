@@ -110,7 +110,7 @@ if __name__ == '__main__':
     parser.add_argument('--run_name', type=str, default='VAE-Revision2', help='name of the run')
     parser.add_argument('--save_dir', type=str, default='./best_models', help='directory to save model')
     parser.add_argument('--num_workers', type=int, default=4, help='number of workers for dataloader')
-    parser.add_argument('--wandb', action='store_true', help='whether to use wandb')
+    parser.add_argument('--wandb', action='store_false', default=True, help='whether to use wandb')
     args = parser.parse_args()
 
     data_args = DataArgument(
