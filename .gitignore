@@ -2,7 +2,7 @@ data/*.csv
 data/*.pkl
 data/*.zip
 data/delete/*
-
+.ipynb_checkpoints/*
 .vscode/*
 __pycache__/*
 wandb/*
