@@ -1,23 +1,10 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset, TensorDataset, Sampler
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import os
-import sys
-import time
-import datetime
-import random
-from tqdm.auto import tqdm
-
+from torch.utils.data import DataLoader, Sampler
 import numpy as np
 import pandas as pd
 import torch
 import bisect
 from torch.utils.data import Dataset
+from utils import DataArgument
 
 
 
@@ -274,19 +261,25 @@ def init_data_loader(df, step_len, shuffle, start, end, select_feature=None):
     return data_loader
 
 if __name__ == "__main__":
-    df = pd.read_pickle('data/csi_data.pkl')
+    # 创建一个数据参数实例
+    default_args = DataArgument()
+
+    df = pd.read_pickle(default_args.dataset_path)
     step_len = 1  # Time Series Length
 
+    print("打印训练数据的全部批次大小")
     # Initializing the DataLoader
-    data_loader = init_data_loader(df, step_len, 
-                                   shuffle=False, start='2010-01-01', end='2015-01-01', 
+    data_loader = init_data_loader(df, step_len,
+                                   shuffle=False, start=default_args.fit_start_time, end=default_args.fit_end_time,
                                    select_feature=None)
 
     # Iterating over data using DataLoader
+    batchcount=0
     for batch, indices in data_loader:
         input_data, labels = batch[:,:,:-1], batch[:,-1,-1].unsqueeze(-1)
         
         # Index information is converted to a list
         # print("Batch Indices:", np.array(indices)[:, -1])
-        print(input_data.shape, labels.shape)
+        batchcount += 1
+        print(f"batch no. {batchcount} ：", input_data.shape, labels.shape)
     print("Done")

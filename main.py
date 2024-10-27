@@ -9,22 +9,6 @@ from train_model import train, validate
 from utils import set_seed, DataArgument
 import wandb
 
-
-def print_train_batches_info(dataloader):
-    try:
-        total_train_batches = len(dataloader)
-        print(f"总共有 {total_train_batches} 个批次 （实现上是每天作为一个批次）")
-        if total_train_batches == 0:
-            print("数据加载器为空，没有批次可以处理。")
-            return
-
-        for i, batch in enumerate(dataloader):
-            if i == 0 or i == (total_train_batches // 2) or i == (total_train_batches - 1):
-                print(f"第 {i + 1} 个批次的大小: {len(batch)}")
-    except Exception as e:
-        print(f"处理训练数据加载器时发生错误: {e}")
-
-
 def main(args):
     set_seed(args.seed)
     # make directory to save model
@@ -64,11 +48,6 @@ def main(args):
                                         start=args.val_start_time,
                                         end=args.val_end_time,
                                         select_feature=args.select_feature)
-    # 打印训练和验证数据加载器的批次大小
-    print("训练数据加载器的动态批次大小：")
-    print_train_batches_info(train_dataloader)
-    print("验证数据加载器的动态批次大小：")
-    print_train_batches_info(valid_dataloader)
 
     T_max = len(train_dataloader) * args.num_epochs
 
