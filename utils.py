@@ -109,7 +109,8 @@ class ModelManager:
             'loss': [loss]
         }
         df = pd.DataFrame(model_info)
-        df.to_csv(self.csv_path, index=False, header=True, encoding='utf8')
+        csv_full_file = os.path.join(save_dir, self.csv_path)
+        df.to_csv(csv_full_file, index=False, header=True, encoding='utf8')
         print(f"Model saved at {save_full_file}")
 
     def get_best_model_file(self, save_dir):
