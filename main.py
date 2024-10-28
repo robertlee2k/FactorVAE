@@ -1,13 +1,16 @@
-import torch
-import pandas as pd
-import os
-from tqdm.auto import tqdm
 import argparse
-from module import FactorVAE, FeatureExtractor, FactorDecoder, FactorEncoder, FactorPredictor, AlphaLayer, BetaLayer
-from dataset import init_data_loader
-from train_model import train, validate
-from utils import set_seed, DataArgument
+import os
+
+import pandas as pd
+import torch
+from tqdm.auto import tqdm
+
 import wandb
+from dataset import init_data_loader
+from module import FactorVAE, FeatureExtractor, FactorDecoder, FactorEncoder, FactorPredictor, AlphaLayer, BetaLayer
+from train_model import train, validate
+from utils import set_seed, DataArgs, ModelStructureArgs, ModelManager
+
 
 def main(args):
     set_seed(args.seed)
@@ -64,7 +67,8 @@ def main(args):
         wandb.init(project="FactorVAE", config=args, name=f"{args.run_name}")
         wandb.config.update(args)
 
-    # Start Trainig
+    model_manager = ModelManager()
+    # Start Training
     for epoch in tqdm(range(args.num_epochs)):
         train_loss = train(factorVAE, train_dataloader, optimizer, scheduler, args)
         val_loss = validate(factorVAE, valid_dataloader, args)
@@ -72,13 +76,9 @@ def main(args):
         print(f"Epoch {epoch + 1}: Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            # ? save model in save_dir
-
-            # ? torch.save
-            save_root = os.path.join(args.save_dir,
-                                     f'{args.run_name}_factor_{args.num_factor}_hdn_{args.hidden_size}_port_{args.num_portfolio}_seed_{args.seed}.pt')
-            torch.save(factorVAE.state_dict(), save_root)
-            print(f"Model saved at {save_root}")
+            save_file = f'{args.run_name}_factor_{args.num_factor}_hdn_{args.hidden_size}_port_{args.num_portfolio}_seed_{args.seed}.pt'
+            model_manager.save_best_model(save_dir=args.save_dir, model_save_file=save_file, model=factorVAE,
+                                          loss=best_val_loss)
 
         if args.wandb:
             wandb.log(
@@ -90,49 +90,61 @@ def main(args):
 
 
 if __name__ == '__main__':
-    # 创建一个数据参数实例
-    default_args = DataArgument()
-
+    # 创建参数解析器
     parser = argparse.ArgumentParser(description='Train a FactorVAE model on stock data')
+    # 从数据参数存储中加载参数，并将其添加到解析器中
+    data_args = DataArgs()
+    parser.add_argument("--qlib_data_path", type=str, default=data_args.qlib_data_path,
+                        help=data_args.get_help('qlib_data_path'))
+    parser.add_argument("--dataset_path", type=str, default=data_args.dataset_path,
+                        help=data_args.get_help('dataset_path'))
+    parser.add_argument("--save_dir", type=str, default=data_args.save_dir,
+                        help=data_args.get_help('save_dir'))
+    parser.add_argument("--seq_len", type=int, default=data_args.seq_len,
+                        help=data_args.get_help('seq_len'))
+    parser.add_argument("--freq", type=str, default=data_args.freq,
+                        help=data_args.get_help('freq'))
+    parser.add_argument("--data_start_time", type=str, default=data_args.data_start_time,
+                        help=data_args.get_help('data_start_time'))
+    parser.add_argument("--data_end_time", type=str, default=data_args.data_end_time,
+                        help=data_args.get_help('data_end_time'))
+    parser.add_argument("--fit_start_time", type=str, default=data_args.fit_start_time,
+                        help=data_args.get_help('fit_start_time'))
+    parser.add_argument("--fit_end_time", type=str, default=data_args.fit_end_time,
+                        help=data_args.get_help('fit_end_time'))
+    parser.add_argument("--val_start_time", type=str, default=data_args.val_start_time,
+                        help=data_args.get_help('val_start_time'))
+    parser.add_argument("--val_end_time", type=str, default=data_args.val_end_time,
+                        help=data_args.get_help('val_end_time'))
+    parser.add_argument("--normalize", type=bool, default=data_args.normalize,
+                        help=data_args.get_help('normalize'))
+    parser.add_argument("--select_feature", type=str, default=data_args.select_feature,
+                        help=data_args.get_help('select_feature'))
+    parser.add_argument("--num_workers", type=int, default=data_args.num_workers,
+                        help=data_args.get_help('num_workers'))
 
-    parser.add_argument("--qlib_data_path", type=str, default=default_args.qlib_data_path,
-                        help=default_args.get_help('qlib_data_path'))
-    parser.add_argument("--dataset_path", type=str, default=default_args.dataset_path,
-                        help=default_args.get_help('dataset_path'))
-    parser.add_argument("--freq", type=str, default=default_args.freq,
-                        help=default_args.get_help('freq'))
-    parser.add_argument("--save_dir", type=str, default=default_args.save_dir,
-                        help=default_args.get_help('save_dir'))
-    parser.add_argument("--data_start_time", type=str, default=default_args.data_start_time,
-                        help=default_args.get_help('data_start_time'))
-    parser.add_argument("--data_end_time", type=str, default=default_args.data_end_time,
-                        help=default_args.get_help('data_end_time'))
-    parser.add_argument("--fit_start_time", type=str, default=default_args.fit_start_time,
-                        help=default_args.get_help('fit_start_time'))
-    parser.add_argument("--fit_end_time", type=str, default=default_args.fit_end_time,
-                        help=default_args.get_help('fit_end_time'))
-    parser.add_argument("--val_start_time", type=str, default=default_args.val_start_time,
-                        help=default_args.get_help('val_start_time'))
-    parser.add_argument("--val_end_time", type=str, default=default_args.val_end_time,
-                        help=default_args.get_help('val_end_time'))
-    parser.add_argument("--seq_len", type=int, default=default_args.seq_len,
-                        help=default_args.get_help('seq_len'))
-    parser.add_argument("--normalize", type=bool, default=default_args.normalize,
-                        help=default_args.get_help('normalize'))
-    parser.add_argument("--select_feature", type=str, default=default_args.select_feature,
-                        help=default_args.get_help('select_feature'))
+    # 从模型结构参数存储中加载参数，并将其添加到解析器中
+    model_args = ModelStructureArgs()
+    parser.add_argument("--seed", type=int, default=model_args.seed,
+                        help=model_args.get_help('seed'))
+    parser.add_argument("--run_name", type=str, default=model_args.run_name,
+                        help=model_args.get_help('run_name'))
+    parser.add_argument("--num_epochs", type=int, default=model_args.num_epochs,
+                        help=model_args.get_help('num_epochs'))
+    parser.add_argument("--lr", type=float, default=model_args.lr,
+                        help=model_args.get_help('lr'))
+    parser.add_argument("--num_latent", type=int, default=model_args.num_latent,
+                        help=model_args.get_help('num_latent'))
+    parser.add_argument("--num_portfolio", type=int, default=model_args.num_portfolio,
+                        help=model_args.get_help('num_portfolio'))
+    parser.add_argument("--num_factor", type=int, default=model_args.num_factor,
+                        help=model_args.get_help('num_factor'))
+    parser.add_argument("--hidden_size", type=int, default=model_args.hidden_size,
+                        help=model_args.get_help('hidden_size'))
+    parser.add_argument("--wandb", action='store_false', default=model_args.wandb,
+                        help=model_args.get_help('wandb'))
 
-    parser.add_argument('--seed', type=int, default=88, help='random seed')
-    parser.add_argument('--run_name', type=str, default='FactorVAE', help='name of the run')
-    parser.add_argument('--num_epochs', type=int, default=20, help='number of epochs to train for') # changed from 30
-    parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
-    parser.add_argument('--num_latent', type=int, default=158, help='number of variables')
-    parser.add_argument('--num_portfolio', type=int, default=800, help='number of stocks')  # changed from 128
-    parser.add_argument('--num_factor', type=int, default=96, help='number of factors')
-    parser.add_argument('--hidden_size', type=int, default=64, help='hidden size')
-    parser.add_argument('--num_workers', type=int, default=4, help='number of workers for dataloader')
-    parser.add_argument('--wandb', action='store_false', default=True, help='whether to use wandb')
-
+    # 解析命令行参数
     args = parser.parse_args()
     # 打印所有参数取值
     print("所有运行参数取值:")

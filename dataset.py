@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 import bisect
 from torch.utils.data import Dataset
-from utils import DataArgument
+from utils import DataArgs
 
 
 
@@ -262,7 +262,7 @@ def init_data_loader(df, step_len, shuffle, start, end, select_feature=None):
 
 if __name__ == "__main__":
     # 创建一个数据参数实例
-    default_args = DataArgument()
+    default_args = DataArgs()
 
     df = pd.read_pickle(default_args.dataset_path)
     step_len = 1  # Time Series Length

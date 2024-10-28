@@ -1,8 +1,9 @@
-import random
-from module import *
-from tqdm import tqdm
-from scipy.stats import spearmanr
 import os
+import random
+
+from scipy.stats import spearmanr
+
+from module import *
 
 
 def set_seed(seed):
@@ -15,7 +16,13 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 
-class DataArgument:
+class CommonArgs:
+    def get_help(self, field_name):
+        """Get help message for a field."""
+        return self.help.get(field_name, '')
+
+
+class DataArgs(CommonArgs):
     # 检查操作系统类型
     is_windows = os.name == 'nt'
     default_qlib_data_path = (
@@ -24,10 +31,11 @@ class DataArgument:
     )
 
     def __init__(self):
-        self.qlib_data_path = DataArgument.default_qlib_data_path
+        self.qlib_data_path = DataArgs.default_qlib_data_path
         self.dataset_path = './data/csi_data.pkl'
         self.freq = 'day'
         self.save_dir = './best_models'
+        # data split args
         self.data_start_time = "2008-01-01"
         self.fit_start_time = "2009-01-01"
         self.fit_end_time = "2022-12-31"
@@ -38,6 +46,7 @@ class DataArgument:
         self.seq_len = 61
         self.normalize = False
         self.select_feature = None
+        self.num_workers = 4
 
     @property
     def help(self):
@@ -56,68 +65,75 @@ class DataArgument:
             'seq_len': "sequence length",
             'normalize': "whether to normalize the data",
             'select_feature': "select specific feature",
+            'num_workers': "number of workers for dataloader",
         }
 
-    def get_help(self, field_name):
-        """get help message of a field"""
-        return self.help.get(field_name, '')
+
+class ModelStructureArgs(CommonArgs):
+    def __init__(self):
+        super().__init__()
+        # Model structure args
+        self.num_latent = 158
+        self.hidden_size = 64
+        self.num_factor = 96
+        self.num_portfolio = 800
+        # training args
+        self.run_name = 'FactorVAE'
+        self.num_epochs: int = 20
+        self.lr: float = 0.0001
+        self.seed: int = 88
+        self.wandb: bool = True
+
+    @property
+    def help(self):
+        return {
+            'run_name': 'Name of the run for identification.',
+            'num_latent': 'Number of latent variables.',
+            'hidden_size': 'Size of the hidden layer.',
+            'num_factor': 'Number of factors in the model.',
+            'num_portfolio': 'number of stocks.',
+            'num_epochs': 'number of epochs to train for.',
+            'lr': 'Learning rate for the optimizer.',
+            'seed': 'Random seed for reproducibility.',
+            'wandb': 'Whether to use wandb for logging.',
+        }
 
 
-def load_model(args):
-    feature_extractor = FeatureExtractor(num_latent=args.num_latent, hidden_size=args.hidden_size)
+class ModelManager:
+    def __init__(self):
+        self.csv_path = 'best_model.csv'
 
-    factor_encoder = FactorEncoder(num_factors=args.num_factor, num_portfolio=args.num_portfolio,
-                                   hidden_size=args.hidden_size)
-    alpha_layer = AlphaLayer(args.hidden_size)
-    beta_layer = BetaLayer(args.hidden_size, args.num_factor)
+    def save_best_model(self, save_dir, model_save_file, model, loss):
+        save_full_file = os.path.join(save_dir, model_save_file)
+        torch.save(model.state_dict(), save_full_file)
+        # 更新 best_model.csv
+        model_info = {
+            'model_save_file': [save_full_file],
+            'loss': [loss]
+        }
+        df = pd.DataFrame(model_info)
+        df.to_csv(self.csv_path, index=False, header=True, encoding='utf8')
+        print(f"Model saved at {save_full_file}")
 
-    factor_decoder = FactorDecoder(alpha_layer, beta_layer)
-    factor_predictor = FactorPredictor(args.hidden_size, args.num_factor)
-    factorVAE = FactorVAE(feature_extractor, factor_encoder, factor_decoder, factor_predictor)
-    return factorVAE
+    def get_best_model_file(self):
+        if not os.path.exists(self.csv_path):
+            raise FileNotFoundError(f"CSV file {self.csv_path} does not exist.")
+        df = pd.read_csv(self.csv_path, encoding='utf8')
+        predictor_root = df['model_save_file'].iloc[0]
+        return predictor_root
 
+    def setup_model(self, args):
+        feature_extractor = FeatureExtractor(num_latent=args.num_latent, hidden_size=args.hidden_size)
 
-@torch.no_grad()
-def generate_prediction_scores(model, test_dataloader, test_dataset, args):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
-    model.to(device)
+        factor_encoder = FactorEncoder(num_factors=args.num_factor, num_portfolio=args.num_portfolio,
+                                       hidden_size=args.hidden_size)
+        alpha_layer = AlphaLayer(args.hidden_size)
+        beta_layer = BetaLayer(args.hidden_size, args.num_factor)
 
-    model.eval()
-    test_loss = 0
-    ls = []
-
-    with tqdm(total=len(test_dataloader)) as pbar:  # -args.seq_length+1
-        for i, (char, _) in enumerate(test_dataloader):
-            char = char.to(device)
-            if char.shape[1] != args.seq_length:
-                print("?")
-                continue
-            predictions = model.prediction(char.float())
-            ls.append(predictions.detach().cpu())
-            pbar.update(1)
-
-    ls = torch.cat(ls, dim=0)
-    multi_index = pd.MultiIndex.from_tuples(test_dataset.get_index(), names=["datetime", "instrument"])
-    ls = pd.DataFrame(ls.numpy(), index=multi_index, columns=['score'])
-    return ls
-
-
-class test_args:
-    run_name: str
-    num_factor: int
-    normalize: bool = True
-    select_feature: bool = True
-
-    batch_size: int = 300
-    seq_length: int = 20
-
-    hidden_size: int = 20
-    num_latent: int = 20
-    num_portfolio: int = 128
-
-    save_dir = './best_model'
-    use_qlib: bool = False
+        factor_decoder = FactorDecoder(alpha_layer, beta_layer)
+        factor_predictor = FactorPredictor(args.hidden_size, args.num_factor)
+        factorVAE = FactorVAE(feature_extractor, factor_encoder, factor_decoder, factor_predictor)
+        return factorVAE
 
 
 def RankIC(df, column1='LABEL0', column2='Pred'):

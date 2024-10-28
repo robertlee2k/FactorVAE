@@ -9,11 +9,11 @@ from qlib.data.dataset.handler import DataHandlerLP
 from qlib.data.dataset import TSDatasetH
 from qlib.contrib.data.handler import Alpha158
 import argparse
-from utils import DataArgument
+from utils import DataArgs
 
 if __name__ == "__main__":
     # 创建一个数据参数实例
-    default_args = DataArgument()
+    default_args = DataArgs()
 
     # Argument parser
     parser = argparse.ArgumentParser()
