@@ -115,10 +115,11 @@ class ModelManager:
         df.to_csv(self.csv_path, index=False, header=True, encoding='utf8')
         print(f"Model saved at {save_full_file}")
 
-    def get_best_model_file(self):
-        if not os.path.exists(self.csv_path):
-            raise FileNotFoundError(f"CSV file {self.csv_path} does not exist.")
-        df = pd.read_csv(self.csv_path, encoding='utf8')
+    def get_best_model_file(self, save_dir):
+        csv_full_file = os.path.join(save_dir, self.csv_path)
+        if not os.path.exists(csv_full_file):
+            raise FileNotFoundError(f"CSV file {csv_full_file} does not exist.")
+        df = pd.read_csv(csv_full_file, encoding='utf8')
         predictor_root = df['model_save_file'].iloc[0]
         return predictor_root
 

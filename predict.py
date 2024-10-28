@@ -10,7 +10,7 @@ from torch.xpu import device
 from tqdm.auto import tqdm
 
 from dataset import init_data_loader
-from utils import setup_model, ModelStructureArgs, DataArgs, RankIC, ModelManager
+from utils import ModelStructureArgs, DataArgs, RankIC, ModelManager
 
 
 def load_predict_args():
@@ -76,7 +76,7 @@ def generate_prediction_scores(model, test_dataloader, args):
 def predict_on_test(args):
     model_manager = ModelManager()
     factorVAE = model_manager.setup_model(args)
-    model_name = model_manager.get_best_model_file()
+    model_name = model_manager.get_best_model_file(args.save_dir)
     # './best_models/FactorVAE_factor_96_hdn_64_port_800_seed_88.pt'
     # VAE-Revision_factor_64_hdn_32_port_100_seed_42.pt'
     factorVAE.load_state_dict(torch.load(model_name,map_location=torch.device(args.my_device)))
