@@ -142,7 +142,17 @@ def predict_and_eval():
     report_normal_df, positions_normal = eval_prediction(predictions, args)
     report_normal_df.to_excel('data/report_normal_df.xlsx')
     print(positions_normal)
-
+    # position_normal 是这个形状
+    # 'SH603298
+    # ': {'
+    # amount
+    # ': 282144.63594425144, '
+    # price
+    # ': 1.9709429740905762, '
+    # weight
+    # ': 0.049064692383200346, '
+    # count_day
+    # ': 1}
 
 if __name__ == '__main__':
     predict_and_eval()
