@@ -44,6 +44,10 @@ def load_predict_args():
     parser.add_argument("--hidden_size", type=int, default=model_args.hidden_size,
                         help=model_args.get_help('hidden_size'))
     final_args = parser.parse_args()
+    # 打印所有参数取值
+    print("所有运行参数取值:")
+    for arg in vars(final_args):
+        print(f"{arg}: {getattr(final_args, arg)}")
     return final_args
 
 
