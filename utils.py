@@ -37,12 +37,12 @@ class DataArgs(CommonArgs):
         self.save_dir = './best_models'
         # data split args
         self.data_start_time = "2008-01-01"
-        self.fit_start_time = "2009-01-01"
+        self.fit_start_time = "2019-01-01" # "2009-01-01"
         self.fit_end_time = "2022-12-31"
         self.val_start_time = '2023-01-01'
         self.val_end_time = '2023-12-31'
         self.test_start_time = '2024-01-01'
-        self.data_end_time = '2024-12-31'
+        self.data_end_time = '2024-10-25'
         self.seq_len = 61
         self.normalize = False
         self.select_feature = None

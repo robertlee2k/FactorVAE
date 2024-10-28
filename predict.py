@@ -141,7 +141,7 @@ def predict_and_eval():
     predictions = predict_on_test(args)
     report_normal_df, positions_normal = eval_prediction(predictions, args)
     report_normal_df.to_excel('data/report_normal_df.xlsx')
-    positions_normal.to_excel('data/positions_normal.xlsx')
+    print(positions_normal)
 
 
 if __name__ == '__main__':
