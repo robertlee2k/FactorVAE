@@ -63,8 +63,10 @@ def generate_prediction_scores(model, test_dataloader, args):
         for i, (char_with_label, _) in enumerate(test_dataloader):
             char = char_with_label[:, :, :-1].to(device)
             if char.shape[1] != args.seq_len:
-                print(f"输入序列长度不是{args.seq_len}，跳过")
+                print(f"输入序列长度不是{args.seq_len}，跳过") # 基本不会出现这种情况
                 continue
+
+            # TODO 需要确认如果char.shape[1]和model训练时的长度不匹配，会有什么问题（目前好像不报错）
             predictions = model.prediction(char.float())
             ls.append(predictions.detach().cpu())
             pbar.update(1)
