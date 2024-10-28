@@ -10,7 +10,7 @@ from dataset import init_data_loader
 from module import FactorVAE, FeatureExtractor, FactorDecoder, FactorEncoder, FactorPredictor, AlphaLayer, BetaLayer
 from train_model import train, validate
 from utils import set_seed, DataArgs, ModelStructureArgs, ModelManager
-
+from predict import predict_and_eval
 
 def main(args):
     set_seed(args.seed)
@@ -87,7 +87,9 @@ def main(args):
     if args.wandb:
         wandb.log({"Best Validation Loss": best_val_loss})
         wandb.finish()
-
+    # 进行预测
+    print("开始预测阶段....")
+    predict_and_eval()
 
 if __name__ == '__main__':
     # 创建参数解析器

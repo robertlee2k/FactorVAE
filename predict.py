@@ -1,16 +1,15 @@
 import argparse
-
+import numpy as np
 import pandas as pd
 import qlib
 import torch
 from qlib.backtest import backtest, executor
 from qlib.contrib.strategy import TopkDropoutStrategy
 from qlib.utils.time import Freq
-from torch.xpu import device
 from tqdm.auto import tqdm
-
+from scipy.stats import spearmanr
 from dataset import init_data_loader
-from utils import ModelStructureArgs, DataArgs, RankIC, ModelManager
+from utils import ModelStructureArgs, DataArgs, ModelManager
 
 
 def load_predict_args():
@@ -73,13 +72,32 @@ def generate_prediction_scores(model, test_dataloader, args):
     return ls
 
 
+def RankIC(df, column1='LABEL0', column2='Pred'):
+    ric_values_multiindex = []
+
+    for date in df.index.get_level_values(0).unique():
+        daily_data = df.loc[date].copy()
+        daily_data['LABEL0_rank'] = daily_data[column1].rank()
+        daily_data['pred_rank'] = daily_data[column2].rank()
+        ric, _ = spearmanr(daily_data['LABEL0_rank'], daily_data['pred_rank'])
+        ric_values_multiindex.append(ric)
+
+    if not ric_values_multiindex:
+        return np.nan, np.nan
+
+    ric = np.mean(ric_values_multiindex)
+    std = np.std(ric_values_multiindex)
+    ir = ric / std if std != 0 else np.nan
+    return pd.DataFrame({'RankIC': [ric], 'RankIC_IR': [ir]})
+
+
 def predict_on_test(args):
     model_manager = ModelManager()
     factorVAE = model_manager.setup_model(args)
     model_name = model_manager.get_best_model_file(args.save_dir)
     # './best_models/FactorVAE_factor_96_hdn_64_port_800_seed_88.pt'
     # VAE-Revision_factor_64_hdn_32_port_100_seed_42.pt'
-    factorVAE.load_state_dict(torch.load(model_name,map_location=torch.device(args.my_device)))
+    factorVAE.load_state_dict(torch.load(model_name, map_location=torch.device(args.my_device)))
     dataset = pd.read_pickle(args.dataset_path)  # .iloc[:, :159]
     dataset.rename(columns={dataset.columns[-1]: 'LABEL0'}, inplace=True)
     test_dataloader = init_data_loader(dataset,
@@ -95,7 +113,6 @@ def predict_on_test(args):
 
 
 def eval_prediction(predictions, args):
-    RankIC(predictions, column1='score', column2='LABEL0')
     # init qlib
     qlib.init(provider_uri=args.qlib_data_path)
     CSI300_BENCH = "SH000300"
@@ -139,20 +156,56 @@ def eval_prediction(predictions, args):
 def predict_and_eval():
     args = load_predict_args()
     predictions = predict_on_test(args)
+    predictions.to_excel("data/predections.xlsx")
+    print("输出预测的 rankic 结果：")
+    rankic_df = RankIC(predictions, column1='score', column2='LABEL0')
+    print(rankic_df)
+
     report_normal_df, positions_normal = eval_prediction(predictions, args)
     report_normal_df.to_excel('data/report_normal_df.xlsx')
-    print(positions_normal)
-    # position_normal 是这个形状
-    # 'SH603298
-    # ': {'
-    # amount
-    # ': 282144.63594425144, '
-    # price
-    # ': 1.9709429740905762, '
-    # weight
-    # ': 0.049064692383200346, '
-    # count_day
-    # ': 1}
+    # general_df, stock_pos_df = process_qlib_position(positions_normal)
+    # general_df.to_excel('data/general_df.xlsx')
+    # stock_pos_df.to_excel('data/stock_pos_df.xlsx')
+
+
+# position_normal 是个嵌套dict形状
+def process_qlib_position(positions):
+    # 创建空列表来存储总体信息和个股详情
+    general_info_list = []
+    stock_details_list = []
+
+
+    for timestamp, daily_obj in positions.items():
+        #  daily_obj 是这个形状：{'_settle_type': 'None', 'position': {'cash': 10000000, 'now_account_value': 10000000.0}, 'init_cash': 10000000}
+        print(f"交易日期：{timestamp}")
+        settle_type = daily_obj['_settle_type']
+        print(f"交易类型：{settle_type}")
+        pos = daily_obj['position']
+        print(f"持仓情况：{pos}")
+        # 获取总体信息
+        general_info = {
+            'timestamp': timestamp,
+            'cash': pos['cash'],
+            'now_account_value': pos['now_account_value']
+        }
+        general_info_list.append(general_info)
+
+        # 获取个股详情
+        for stock_code, details in pos.items():
+            stock_details = {
+                'timestamp': timestamp,
+                'stock_code': stock_code,
+                'amount': details.get('amount'),
+                'weight': details.get('weight')
+            }
+            stock_details_list.append(stock_details)
+
+    # 创建 DataFrame
+    general_df = pd.DataFrame(general_info_list)
+    stock_pos_df = pd.DataFrame(stock_details_list)
+
+    return general_df, stock_pos_df
+
 
 if __name__ == '__main__':
     predict_and_eval()

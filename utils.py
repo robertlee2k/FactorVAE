@@ -1,8 +1,5 @@
 import os
 import random
-
-from scipy.stats import spearmanr
-
 from module import *
 
 
@@ -37,13 +34,13 @@ class DataArgs(CommonArgs):
         self.save_dir = './best_models'
         # data split args
         self.data_start_time = "2008-01-01"
-        self.fit_start_time = "2019-01-01" # "2009-01-01"
+        self.fit_start_time = "2009-01-01" # "2009-01-01"
         self.fit_end_time = "2022-12-31"
         self.val_start_time = '2023-01-01'
         self.val_end_time = '2023-12-31'
         self.test_start_time = '2024-01-01'
         self.data_end_time = '2024-10-25'
-        self.seq_len = 61
+        self.seq_len = 60
         self.normalize = False
         self.select_feature = None
         self.num_workers = 4
@@ -137,20 +134,4 @@ class ModelManager:
         return factorVAE
 
 
-def RankIC(df, column1='LABEL0', column2='Pred'):
-    ric_values_multiindex = []
 
-    for date in df.index.get_level_values(0).unique():
-        daily_data = df.loc[date].copy()
-        daily_data['LABEL0_rank'] = daily_data[column1].rank()
-        daily_data['pred_rank'] = daily_data[column2].rank()
-        ric, _ = spearmanr(daily_data['LABEL0_rank'], daily_data['pred_rank'])
-        ric_values_multiindex.append(ric)
-
-    if not ric_values_multiindex:
-        return np.nan, np.nan
-
-    ric = np.mean(ric_values_multiindex)
-    std = np.std(ric_values_multiindex)
-    ir = ric / std if std != 0 else np.nan
-    return pd.DataFrame({'RankIC': [ric], 'RankIC_IR': [ir]})
