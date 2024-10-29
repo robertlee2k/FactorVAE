@@ -40,7 +40,6 @@ class DataArgs(CommonArgs):
         self.val_end_time = '2023-12-31'
         self.test_start_time = '2024-01-01'
         self.data_end_time = '2024-10-25'
-        self.seq_len = 60
         self.normalize = False
         self.select_feature = None
         self.num_workers = 4
@@ -59,7 +58,6 @@ class DataArgs(CommonArgs):
             'val_start_time': "val_start_time",
             'val_end_time': "val_end_time",
             'test_start_time': "test_start_time",
-            'seq_len': "sequence length",
             'normalize': "whether to normalize the data",
             'select_feature': "select specific feature",
             'num_workers': "number of workers for dataloader",
@@ -74,6 +72,7 @@ class ModelStructureArgs(CommonArgs):
         self.hidden_size = 64
         self.num_factor = 96
         self.num_portfolio = 800
+        self.seq_len = 60
         # training args
         self.run_name = 'FactorVAE'
         self.num_epochs: int = 20
@@ -88,6 +87,7 @@ class ModelStructureArgs(CommonArgs):
             'num_latent': 'Number of latent variables.',
             'hidden_size': 'Size of the hidden layer.',
             'num_factor': 'Number of factors in the model.',
+            'seq_len': "sequence length",
             'num_portfolio': 'number of stocks.',
             'num_epochs': 'number of epochs to train for.',
             'lr': 'Learning rate for the optimizer.',

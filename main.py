@@ -102,8 +102,6 @@ if __name__ == '__main__':
                         help=data_args.get_help('dataset_path'))
     parser.add_argument("--save_dir", type=str, default=data_args.save_dir,
                         help=data_args.get_help('save_dir'))
-    parser.add_argument("--seq_len", type=int, default=data_args.seq_len,
-                        help=data_args.get_help('seq_len'))
     parser.add_argument("--freq", type=str, default=data_args.freq,
                         help=data_args.get_help('freq'))
     parser.add_argument("--data_start_time", type=str, default=data_args.data_start_time,
@@ -143,6 +141,8 @@ if __name__ == '__main__':
                         help=model_args.get_help('num_factor'))
     parser.add_argument("--hidden_size", type=int, default=model_args.hidden_size,
                         help=model_args.get_help('hidden_size'))
+    parser.add_argument("--seq_len", type=int, default=model_args.seq_len,
+                        help=model_args.get_help('seq_len'))
     parser.add_argument("--wandb", action='store_false', default=model_args.wandb,
                         help=model_args.get_help('wandb'))
 

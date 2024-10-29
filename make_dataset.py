@@ -36,8 +36,6 @@ if __name__ == "__main__":
                         help=default_args.get_help('val_end_time'))
     parser.add_argument("--test_start_time", type=str, default=default_args.test_start_time,
                         help=default_args.get_help('test_start_time'))
-    parser.add_argument("--seq_len", type=int, default=default_args.seq_len,
-                        help=default_args.get_help('seq_len'))
     parser.add_argument("--normalize", type=bool, default=default_args.normalize,
                         help=default_args.get_help('normalize'))
     parser.add_argument("--select_feature", type=str, default=default_args.select_feature,
@@ -174,7 +172,7 @@ if __name__ == "__main__":
 
     handler = DataHandlerLP.from_df(dataframe_LM)
 
-    QlibTSDatasetH = TSDatasetH(handler=handler, segments=segments, step_len=args.seq_len)
+    QlibTSDatasetH = TSDatasetH(handler=handler, segments=segments, step_len=10) # 这里只是做个测试，所以随便取step_len值
     temp = QlibTSDatasetH.prepare(segments="train", data_key=DataHandlerLP.DK_L)
 
     print("------------------ Test QlibTSDatasetH ------------------")

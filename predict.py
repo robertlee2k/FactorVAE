@@ -25,8 +25,6 @@ def load_predict_args():
                         help=data_args.get_help('dataset_path'))
     parser.add_argument("--save_dir", type=str, default=data_args.save_dir,
                         help=data_args.get_help('save_dir'))
-    parser.add_argument("--seq_len", type=int, default=data_args.seq_len,
-                        help=data_args.get_help('seq_len'))
     parser.add_argument("--test_start_time", type=str, default=data_args.test_start_time,
                         help=data_args.get_help('test_start_time'))
     parser.add_argument("--data_end_time", type=str, default=data_args.data_end_time,
@@ -43,6 +41,8 @@ def load_predict_args():
                         help=model_args.get_help('num_factor'))
     parser.add_argument("--hidden_size", type=int, default=model_args.hidden_size,
                         help=model_args.get_help('hidden_size'))
+    parser.add_argument("--seq_len", type=int, default=model_args.seq_len,
+                        help=model_args.get_help('seq_len'))
     final_args = parser.parse_args()
     # 打印所有参数取值
     print("所有运行参数取值:")
