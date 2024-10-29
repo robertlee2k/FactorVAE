@@ -23,7 +23,7 @@ class DataArgs(CommonArgs):
     # 检查操作系统类型
     is_windows = os.name == 'nt'
     default_qlib_data_path = (
-        'C:/20-python/InvariantStock/data/qlib_data/cn_data' if is_windows else
+        '../InvariantStock/data/qlib_data/cn_data' if is_windows else
         '/home/bo.li/.qlib/qlib_data/cn_data'
     )
 

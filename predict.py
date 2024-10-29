@@ -162,7 +162,7 @@ def eval_prediction(predictions, args):
 def predict_and_eval():
     args = load_predict_args()
     predictions = predict_on_test(args)
-    predictions.to_excel("data/predections.xlsx")
+    predictions.to_pickle("data/predections.pkl")
     print("输出预测的 rankic 结果：")
     rankic_df = RankIC(predictions, column1='score', column2='LABEL0')
     print(rankic_df)
