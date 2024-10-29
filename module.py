@@ -1,4 +1,4 @@
-# GRU을 통한 feature extraction, 입력으로 주식들의 firm characteristic을 받아서, firm characteristic을 통해 주식의 latent vector를 추출
+# 通过GRU进行特征提取，输入为股票的公司特征，通过公司特征提取股票的潜在向量
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -232,12 +232,13 @@ class FactorVAE_old(nn.Module):
         return y_pred
     
 class FactorVAE(nn.Module):
-    def __init__(self, feature_extractor, factor_encoder, factor_decoder, factor_predictor):
+    def __init__(self, feature_extractor, factor_encoder, factor_decoder, factor_predictor, args):
         super(FactorVAE, self).__init__()
         self.feature_extractor = feature_extractor
         self.factor_encoder = factor_encoder
         self.factor_decoder = factor_decoder
         self.factor_predictor = factor_predictor
+        self.device = args.device
 
     @staticmethod
     def KL_Divergence(mu1, sigma1, mu2, sigma2):
@@ -258,14 +259,41 @@ class FactorVAE(nn.Module):
 
         # print(f"pred_mu: {pred_mu.shape}, pred_sigma: {pred_sigma.shape}")
         # Define VAE loss function with reconstruction loss and KL divergence
+
+        # TODO 是否要换成下面更看重排名的损失函数？
+        # reconstruction_loss = F.mse_loss(ranks * reconstruction, ranks * returns)
         reconstruction_loss = F.mse_loss(reconstruction, returns)
-            
+
         # Calculate KL divergence between two Gaussian distributions
         if torch.any(pred_sigma == 0):
             pred_sigma[pred_sigma == 0] = 1e-6
         kl_divergence = self.KL_Divergence(factor_mu, factor_sigma, pred_mu, pred_sigma)
 
-        vae_loss = reconstruction_loss + kl_divergence
+        # 计算排名，给高排名的股票打分大，给低排名的股票打分小
+        # 为此，应用铰链损失（hinge loss）进行股票排名确保预测的股票排名与实际表现高度一致，
+        # 这对于在实际交易中选择正确的股票至关重要。这种方法优先考虑准确的排名，从而导致更好的股票选择。
+        # 损失函数定义如下：
+        #
+        # 投资组合损失 (inv loss):
+        # l_inv_t = Σ(i=0 to N) Σ(j=0 to N) max(0, (y_hat_t,i^inv - y_hat_t,j^inv) * (y_t,i - y_t,j))
+        batch_size, seq_length, num_latent = x.shape
+        ranks = torch.ones_like(returns)
+        ranks_index = torch.argsort(returns, dim=0)
+        ranks[ranks_index, 0] = torch.arange(0, batch_size).reshape(ranks.shape).float().to(self.device)
+        ranks = (ranks - torch.mean(ranks)) / torch.std(ranks)
+        ranks = ranks ** 2
+
+        all_ones = torch.ones(batch_size, 1).to(self.device)
+        pre_pw_dif = (torch.matmul(reconstruction, torch.transpose(all_ones, 0, 1))
+                      - torch.matmul(all_ones, torch.transpose(reconstruction, 0, 1)))
+        gt_pw_dif = (
+                torch.matmul(all_ones, torch.transpose(returns, 0, 1)) -
+                torch.matmul(returns, torch.transpose(all_ones, 0, 1))
+        )
+        rank_loss = torch.mean(ranks * F.relu(pre_pw_dif * gt_pw_dif))
+        vae_loss = reconstruction_loss + kl_divergence + rank_loss
+        # 旧版loss
+        # vae_loss = reconstruction_loss + kl_divergence
         # print("loss: ", vae_loss)
         return vae_loss, reconstruction, factor_mu, factor_sigma, pred_mu, pred_sigma #! reconstruction, factor_mu, factor_sigma
 

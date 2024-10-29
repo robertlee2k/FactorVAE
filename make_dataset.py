@@ -7,9 +7,9 @@ import qlib
 from qlib.constant import REG_CN, REG_US
 from qlib.data.dataset.handler import DataHandlerLP
 from qlib.data.dataset import TSDatasetH
-from qlib.contrib.data.handler import Alpha158
+from qlib.contrib.data.handler import Alpha158, Alpha360
 import argparse
-from utils import DataArgs
+from utils import DataArgs,ModelStructureArgs
 
 if __name__ == "__main__":
     # 创建一个数据参数实例
@@ -44,6 +44,13 @@ if __name__ == "__main__":
                         help=default_args.get_help('dataset_path'))
     parser.add_argument("--freq", type=str, default=default_args.freq,
                         help=default_args.get_help('freq'))
+
+    # 创建模型参数实例 （num_latent 和 seq_len 有用）
+    model_args = ModelStructureArgs()
+    parser.add_argument("--num_latent", type=int, default=model_args.num_latent,
+                        help=model_args.get_help('num_latent'))
+    parser.add_argument("--seq_len", type=int, default=model_args.seq_len,
+                        help=model_args.get_help('seq_len'))
 
     args = parser.parse_args()
     # 打印所有参数取值
@@ -109,7 +116,12 @@ if __name__ == "__main__":
     }
 
     # Initialize the dataset object with configuration parameters
-    dataset = Alpha158(**data_handler_config)
+    if args.num_latent == 158:
+        dataset = Alpha158(**data_handler_config)
+    elif args.num_latent == 360:
+        dataset = Alpha360(**data_handler_config)
+    else:
+        dataset = None
 
     # Fetch the feature and label data for the local dataset (low frequency)
     dataframe_L = dataset.fetch(col_set=["feature", "label"], data_key=DataHandlerLP.DK_L)
@@ -172,7 +184,7 @@ if __name__ == "__main__":
 
     handler = DataHandlerLP.from_df(dataframe_LM)
 
-    QlibTSDatasetH = TSDatasetH(handler=handler, segments=segments, step_len=10) # 这里只是做个测试，所以随便取step_len值
+    QlibTSDatasetH = TSDatasetH(handler=handler, segments=segments, step_len=args.seq_len) # 这里只是做个测试，所以随便取step_len值
     temp = QlibTSDatasetH.prepare(segments="train", data_key=DataHandlerLP.DK_L)
 
     print("------------------ Test QlibTSDatasetH ------------------")

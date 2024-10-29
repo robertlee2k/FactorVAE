@@ -12,6 +12,7 @@ from train_model import train, validate
 from utils import set_seed, DataArgs, ModelStructureArgs, ModelManager
 from predict import predict_and_eval
 
+
 def main(args):
     set_seed(args.seed)
     # make directory to save model
@@ -26,14 +27,14 @@ def main(args):
     beta_layer = BetaLayer(args.hidden_size, args.num_factor)
     factor_decoder = FactorDecoder(alpha_layer, beta_layer)
     factor_predictor = FactorPredictor(args.hidden_size, args.num_factor)
-    factorVAE = FactorVAE(feature_extractor, factor_encoder, factor_decoder, factor_predictor)
+    factorVAE = FactorVAE(feature_extractor, factor_encoder, factor_decoder, factor_predictor, args=args)
 
     # create dataloaders
     dataset = pd.read_pickle(args.dataset_path)
     print("数据pkl文件已加载：数据列为")
     for col in dataset.columns:
         print(col)
-    dataset = dataset.iloc[:, :159]  # 从指定路径读取数据集，并选择前159列，排除市场信息
+    # dataset = dataset.iloc[:, :159]  # 从指定路径读取数据集，并选择前159列，排除市场信息
     dataset.rename(columns={dataset.columns[-1]: 'LABEL0'}, inplace=True)  # 将数据集的最后一列重命名为 'LABEL0'，表示预测因子目标。
     print("更名处理后：")
     print(dataset.head())
@@ -92,6 +93,7 @@ def main(args):
     print("开始预测阶段....")
     predict_and_eval()
 
+
 if __name__ == '__main__':
     # 创建参数解析器
     parser = argparse.ArgumentParser(description='Train a FactorVAE model on stock data')
@@ -147,6 +149,8 @@ if __name__ == '__main__':
     parser.add_argument("--wandb", action='store_false', default=model_args.wandb,
                         help=model_args.get_help('wandb'))
 
+    my_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    parser.add_argument("--device", type=str, default=my_device, help="device to use")
     # 解析命令行参数
     args = parser.parse_args()
     # 打印所有参数取值

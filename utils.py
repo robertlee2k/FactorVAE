@@ -33,7 +33,7 @@ class DataArgs(CommonArgs):
         self.freq = 'day'
         self.save_dir = './best_models'
         # data split args
-        self.data_start_time = "2008-01-01"
+        self.data_start_time = "2008-01-01" # "2008-01-01"
         self.fit_start_time = "2009-01-01" # "2009-01-01"
         self.fit_end_time = "2022-12-31"
         self.val_start_time = '2023-01-01'
@@ -68,7 +68,7 @@ class ModelStructureArgs(CommonArgs):
     def __init__(self):
         super().__init__()
         # Model structure args
-        self.num_latent = 158
+        self.num_latent = 158  #alpha158 or alpha360 ( 360 is not useful in this model)
         self.hidden_size = 64
         self.num_factor = 96
         self.num_portfolio = 800
@@ -131,7 +131,7 @@ class ModelManager:
 
         factor_decoder = FactorDecoder(alpha_layer, beta_layer)
         factor_predictor = FactorPredictor(args.hidden_size, args.num_factor)
-        factorVAE = FactorVAE(feature_extractor, factor_encoder, factor_decoder, factor_predictor)
+        factorVAE = FactorVAE(feature_extractor, factor_encoder, factor_decoder, factor_predictor, args)
         return factorVAE
 
 
