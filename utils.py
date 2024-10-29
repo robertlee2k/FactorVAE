@@ -24,7 +24,7 @@ class DataArgs(CommonArgs):
     is_windows = os.name == 'nt'
     default_qlib_data_path = (
         '../InvariantStock/data/qlib_data/cn_data' if is_windows else
-        '/home/bo.li/.qlib/qlib_data/cn_data'
+        '../.qlib/qlib_data/cn_data'
     )
 
     def __init__(self):
