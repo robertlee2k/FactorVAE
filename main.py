@@ -87,6 +87,7 @@ def main(args):
     if args.wandb:
         wandb.log({"Best Validation Loss": best_val_loss})
         wandb.finish()
+
     # 进行预测
     print("开始预测阶段....")
     predict_and_eval()
