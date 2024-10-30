@@ -38,6 +38,8 @@ def main(args):
     dataset.rename(columns={dataset.columns[-1]: 'LABEL0'}, inplace=True)  # 将数据集的最后一列重命名为 'LABEL0'，表示预测因子目标。
     print("更名处理后：")
     print(dataset.head())
+    print("列数值区间")
+    print(dataset.describe())
 
     train_dataloader = init_data_loader(dataset,
                                         shuffle=True,
