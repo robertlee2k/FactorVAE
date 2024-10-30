@@ -172,6 +172,7 @@ def predict_and_eval():
     # general_df, stock_pos_df = process_qlib_position(positions_normal)
     # general_df.to_excel('data/general_df.xlsx')
     # stock_pos_df.to_excel('data/stock_pos_df.xlsx')
+    print("完成回测，回测结果已保存。")
 
 
 # position_normal 是个嵌套dict形状

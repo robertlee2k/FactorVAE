@@ -294,7 +294,7 @@ class FactorVAE(nn.Module):
         vae_loss = reconstruction_loss + kl_divergence + rank_loss
         # 旧版loss
         # vae_loss = reconstruction_loss + kl_divergence
-        # print("loss: ", vae_loss)
+        print(f"reconstruction_loss={reconstruction_loss:.4f}: kl_divergence={kl_divergence:.4f}: rank_loss={rank_loss:.4f}")
         return vae_loss, reconstruction, factor_mu, factor_sigma, pred_mu, pred_sigma #! reconstruction, factor_mu, factor_sigma
 
     # 在模型训练完成后使用此函数进行预测

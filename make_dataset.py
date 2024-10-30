@@ -108,11 +108,13 @@ if __name__ == "__main__":
         "learn_processors": [
             # 使用删除标签中的缺失值处理器
             {"class": "DropnaLabel", },
-            # 使用截面排名标准化处理标签字段
+            # added by me: 增加同样逻辑时训练推理一致，使用健壮的Z分数标准化处理特征字段，并剪裁异常值
+            {"class": "RobustZScoreNorm", "kwargs": {"fields_group": "feature", "clip_outlier": True}},
+        # 使用截面排名标准化处理标签字段
             {"class": "CSRankNorm", "kwargs": {"fields_group": "label"}},  # ！从CSZScoreNorm更改为CSRankNorm
         ],
         # 定义标签字段的计算公式
-        "label": ["Ref($close, -2)/Ref($close, -1) - 1"],
+        "label": ["Ref($close, -5)/Ref($close, -1) - 1"], # 改为预测5日收益率
     }
 
     # Initialize the dataset object with configuration parameters
