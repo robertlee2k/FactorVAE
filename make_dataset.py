@@ -71,7 +71,7 @@ if __name__ == "__main__":
         # SH000300是沪深300指数的代码
         benchmark = "SH000300"
         # csi300代表沪深300指数成分股
-        market = "csi800"  # "csi300"
+        market = "csi1000" # "csi800"  # "csi300"
     elif provider_uri.split('/')[-1] == "us_data":
         # 如果数据路径指向美国数据，则初始化Qlib为美国市场数据
         # REG_US是美国市场的区域代码

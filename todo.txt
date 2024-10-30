@@ -1,6 +1,6 @@
-done 1. Loss计算从相对排位加上绝对数值 
+done（效果很好） 1. Loss计算从相对排位加上绝对数值 
 
-2. CZRankNorm对于截面数据差异大的需不需要处理？ （174-800）
+2. CZRankNorm对于截面数据差异大的需不需要处理？ （174-800，会导致rank score分布不一样）
 
 done（效果有用）： 2. label换成close（-5）， close（-1） 
 

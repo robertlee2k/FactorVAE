@@ -34,8 +34,8 @@ class DataArgs(CommonArgs):
         self.freq = 'day'
         self.save_dir = './best_models'
         # data split args
-        self.data_start_time = "2008-01-01" # "2008-01-01"
-        self.fit_start_time = "2009-01-01" # "2009-01-01"
+        self.data_start_time = "2014-01-01" # "2008-01-01" # for CSI300 or 800
+        self.fit_start_time = "2015-01-01" # "2009-01-01" # for CSI300 or 800
         self.fit_end_time = "2022-12-31"
         self.val_start_time = '2023-01-01'
         self.val_end_time = '2023-12-31'
@@ -72,7 +72,7 @@ class ModelStructureArgs(CommonArgs):
         self.num_latent = 158  #alpha158 or alpha360 ( 360 is not useful in this model)
         self.hidden_size = 64
         self.num_factor = 96
-        self.num_portfolio = 800
+        self.num_portfolio = 1000  # 800 for csi800
         self.seq_len = 60
         # training args
         self.run_name = 'FactorVAE'
