@@ -15,7 +15,7 @@ from utils import ModelStructureArgs, DataArgs, ModelManager
 def load_predict_args():
     parser = argparse.ArgumentParser(description='Predict using trained model on stock data')
     my_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--my_device", type=str, default=my_device, help="device to use")
+    parser.add_argument("--device", type=str, default=my_device, help="device to use")
 
     # 从数据参数存储中加载参数，并将其添加到解析器中
     data_args = DataArgs()
@@ -53,7 +53,7 @@ def load_predict_args():
 
 @torch.no_grad()
 def generate_prediction_scores(model, test_dataloader, args):
-    device = args.my_device
+    device = args.device
     print(device)
     model.to(device)
     model.eval()
@@ -103,7 +103,7 @@ def predict_on_test(args):
     model_name = model_manager.get_best_model_file(args.save_dir)
     # './best_models/FactorVAE_factor_96_hdn_64_port_800_seed_88.pt'
     # VAE-Revision_factor_64_hdn_32_port_100_seed_42.pt'
-    factorVAE.load_state_dict(torch.load(model_name, map_location=torch.device(args.my_device)))
+    factorVAE.load_state_dict(torch.load(model_name, map_location=torch.device(args.device)))
     dataset = pd.read_pickle(args.dataset_path)  # .iloc[:, :159]
     dataset.rename(columns={dataset.columns[-1]: 'LABEL0'}, inplace=True)
     test_dataloader = init_data_loader(dataset,
