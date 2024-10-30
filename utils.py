@@ -1,7 +1,8 @@
 import os
 import random
 from module import *
-
+import pandas as pd
+import numpy as np
 
 def set_seed(seed):
     random.seed(seed)
