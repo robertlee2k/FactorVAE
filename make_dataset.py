@@ -100,18 +100,18 @@ if __name__ == "__main__":
         # 配置推理数据处理流程
         "infer_processors": [
             # {"class" : "FilterCol", "kwargs" : {"fields_group" : "feature"},},
-            # 使用健壮的Z分数标准化处理特征字段，并剪裁异常值
-            {"class": "RobustZScoreNorm", "kwargs": {"fields_group": "feature", "clip_outlier": True}},
+            # 使用健壮的Z分数标准化处理特征字段，并剪裁异常值--removed by me,目前都是用alpha158因子，这些都已经做了必要norm，决定不用
+            #{"class": "RobustZScoreNorm", "kwargs": {"fields_group": "feature", "clip_outlier": True}},
             # 使用填充缺失值处理器处理特征字段中的缺失值
             {"class": "Fillna", "kwargs": {"fields_group": "feature"}}],
         # 配置学习数据处理流程
         "learn_processors": [
             # 使用删除标签中的缺失值处理器
             {"class": "DropnaLabel", },
-            # added by me: 增加同样逻辑时训练推理一致，使用健壮的Z分数标准化处理特征字段，并剪裁异常值
-            {"class": "RobustZScoreNorm", "kwargs": {"fields_group": "feature", "clip_outlier": True}},
-        # 使用截面排名标准化处理标签字段
-            {"class": "CSRankNorm", "kwargs": {"fields_group": "label"}},  # ！从CSZScoreNorm更改为CSRankNorm
+            ## removed by me: 保持训练推理时同样逻辑一致，使用健壮的Z分数标准化处理特征字段，并剪裁异常值
+            #{"class": "RobustZScoreNorm", "kwargs": {"fields_group": "feature", "clip_outlier": True}},
+            # 使用截面排名标准化处理标签字段 ，！从CSRankNorm更改为CSZScoreNorm，修改了损失函数，目标直接预测涨幅
+            {"class": "CSZScoreNorm", "kwargs": {"fields_group": "label"}},
         ],
         # 定义标签字段的计算公式
         "label": ["Ref($close, -5)/Ref($close, -1) - 1"], # 改为预测5日收益率
