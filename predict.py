@@ -25,12 +25,14 @@ def load_predict_args():
                         help=data_args.get_help('dataset_path'))
     parser.add_argument("--save_dir", type=str, default=data_args.save_dir,
                         help=data_args.get_help('save_dir'))
+    parser.add_argument("--market", type=str, default=data_args.market,
+                        help=data_args.get_help('market'))
     parser.add_argument("--test_start_time", type=str, default=data_args.test_start_time,
                         help=data_args.get_help('test_start_time'))
     parser.add_argument("--data_end_time", type=str, default=data_args.data_end_time,
                         help=data_args.get_help('data_end_time'))
     # 从模型结构参数存储中加载参数，并将其添加到解析器中
-    model_args = ModelStructureArgs()
+    model_args = ModelStructureArgs(data_args.market)
     parser.add_argument("--run_name", type=str, default=model_args.run_name,
                         help=model_args.get_help('run_name'))
     parser.add_argument("--num_latent", type=int, default=model_args.num_latent,

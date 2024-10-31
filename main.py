@@ -79,9 +79,9 @@ def main(args):
         print(f"Epoch {epoch + 1}: Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            save_file = f'{args.run_name}_factor_{args.num_factor}_hdn_{args.hidden_size}_port_{args.num_portfolio}_seed_{args.seed}.pt'
+            save_file = f'{args.run_name}_seed_{args.seed}_latent_{args.num_latent}_port_{args.num_portfolio}_period_{args.target_period}_{args.target}.pt'
             model_manager.save_best_model(save_dir=args.save_dir, model_save_file=save_file, model=factorVAE,
-                                          loss=best_val_loss)
+                                          loss=best_val_loss, epoch=epoch+1)
 
         if args.wandb:
             wandb.log(
@@ -107,6 +107,8 @@ if __name__ == '__main__':
                         help=data_args.get_help('dataset_path'))
     parser.add_argument("--save_dir", type=str, default=data_args.save_dir,
                         help=data_args.get_help('save_dir'))
+    parser.add_argument("--market", type=str, default=data_args.market,
+                        help=data_args.get_help('market'))
     parser.add_argument("--freq", type=str, default=data_args.freq,
                         help=data_args.get_help('freq'))
     parser.add_argument("--data_start_time", type=str, default=data_args.data_start_time,
@@ -121,6 +123,10 @@ if __name__ == '__main__':
                         help=data_args.get_help('val_start_time'))
     parser.add_argument("--val_end_time", type=str, default=data_args.val_end_time,
                         help=data_args.get_help('val_end_time'))
+    parser.add_argument("--target_period", type=str, default=data_args.target_period,
+                        help=data_args.get_help('target_period'))
+    parser.add_argument("--target", type=str, default=data_args.target,
+                        help=data_args.get_help('target'))
     parser.add_argument("--normalize", type=bool, default=data_args.normalize,
                         help=data_args.get_help('normalize'))
     parser.add_argument("--select_feature", type=str, default=data_args.select_feature,
@@ -129,7 +135,7 @@ if __name__ == '__main__':
                         help=data_args.get_help('num_workers'))
 
     # 从模型结构参数存储中加载参数，并将其添加到解析器中
-    model_args = ModelStructureArgs()
+    model_args = ModelStructureArgs(data_args.market)
     parser.add_argument("--seed", type=int, default=model_args.seed,
                         help=model_args.get_help('seed'))
     parser.add_argument("--run_name", type=str, default=model_args.run_name,

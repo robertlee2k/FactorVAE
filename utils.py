@@ -33,14 +33,20 @@ class DataArgs(CommonArgs):
         self.dataset_path = './data/csi_data.pkl'
         self.freq = 'day'
         self.save_dir = './best_models'
+        # CSI300, CSI800,CSI1000
+        self.market = "csi800"
         # data split args
-        self.data_start_time = "2014-01-01" # "2008-01-01" # for CSI300 or 800
-        self.fit_start_time = "2015-01-01" # "2009-01-01" # for CSI300 or 800
+        # "2014-01-01" for csi1000 , "2008-01-01" ,for CSI300 or 800
+        self.data_start_time = "2008-01-01"
+        # "2015-01-01" for csi1000 "2009-01-01" for CSI300 or 800
+        self.fit_start_time = "2009-01-01"
         self.fit_end_time = "2022-12-31"
         self.val_start_time = '2023-01-01'
         self.val_end_time = '2023-12-31'
         self.test_start_time = '2024-01-01'
         self.data_end_time = '2024-10-25'
+        self.target_period = 5
+        self.target = "CSZScoreNorm"  # or "CSRankNorm" for ranking learning
         self.normalize = False
         self.select_feature = None
         self.num_workers = 4
@@ -52,6 +58,7 @@ class DataArgs(CommonArgs):
             'dataset_path': "history dataset prepared for training",
             'freq': "history data frequency",
             'save_dir': 'directory to save model',
+            'market': 'stock range indicated by market(csi300,800,1000)',
             'data_start_time': "all data start time (need some buff to do calculations fields like MA60",
             'data_end_time': "all data end time",
             'fit_start_time': "training start_time",
@@ -59,6 +66,8 @@ class DataArgs(CommonArgs):
             'val_start_time': "val_start_time",
             'val_end_time': "val_end_time",
             'test_start_time': "test_start_time",
+            'target_period': "forecast target period",
+            'target':"to learn score or to learn rank",
             'normalize': "whether to normalize the data",
             'select_feature': "select specific feature",
             'num_workers': "number of workers for dataloader",
@@ -66,13 +75,15 @@ class DataArgs(CommonArgs):
 
 
 class ModelStructureArgs(CommonArgs):
-    def __init__(self):
+    def __init__(self,market):
         super().__init__()
         # Model structure args
         self.num_latent = 158  #alpha158 or alpha360 ( 360 is not useful in this model)
         self.hidden_size = 64
         self.num_factor = 96
-        self.num_portfolio = 1000  # 800 for csi800
+        # 1000 for csi1000  # 800 for csi800
+        # 从 market 参数中提取数字
+        self.num_portfolio = int(''.join(filter(str.isdigit, market)))
         self.seq_len = 60
         # training args
         self.run_name = 'FactorVAE'
@@ -101,11 +112,12 @@ class ModelManager:
     def __init__(self):
         self.csv_path = 'best_model.csv'
 
-    def save_best_model(self, save_dir, model_save_file, model, loss):
+    def save_best_model(self, save_dir, model_save_file, model, loss, epoch):
         save_full_file = os.path.join(save_dir, model_save_file)
         torch.save(model.state_dict(), save_full_file)
         # 更新 best_model.csv
         model_info = {
+            'epoch': [epoch],
             'model_save_file': [save_full_file],
             'loss': [loss]
         }
